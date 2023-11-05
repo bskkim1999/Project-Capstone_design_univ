@@ -27,7 +27,7 @@ Usage - formats:
                                  yolov5s_edgetpu.tflite     # TensorFlow Edge TPU
                                  yolov5s_paddle_model       # PaddlePaddle
 """
-
+import time
 import argparse
 import os
 import platform
@@ -136,6 +136,7 @@ def run(
     """
 
     for path, im, im0s, vid_cap, s in dataset:
+
         with dt[0]:
             im = torch.from_numpy(im).to(model.device)   #이미지 데이터를 나타내는 넘파이 배열(numpy array)입니다. 이 코드는 해당 넘파이 배열을 PyTorch 텐서(Tensor)로 변환하고, 그 텐서를 모델이 사용하는 디바이스(device)로 이동시키는 역할을 합니다.
             im = im.half() if model.fp16 else im.float()  # uint8 to fp16/32
@@ -174,7 +175,7 @@ def run(
             s += '%gx%g ' % im.shape[2:]  # print string   #0: 480x640 1 person, 135.5ms 라는 터미널 출력메시지 중에서 480x640 에 해당한다.
 
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
-            imc = im0.copy() if save_crop else im0  # for save_crop
+            imc = im0.copy() if save_crop else im0  # for save_crop, 변수 imc는 im0와 같다.
             annotator = Annotator(im0, line_width=line_thickness, example=str(names))
 
             if len(det):
@@ -194,17 +195,27 @@ def run(
                     #print(s)
 
                 # Write results
-                for *xyxy, conf, cls in reversed(det):
-                    if save_txt:  # Write to file
+                for *xyxy, conf, cls in reversed(det):    # *xyxy는 언패킹이다.
+                    if save_txt:  # Write to file  (이 코드는 이번 프로젝트에서 사용안함.)
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                         line = (cls, *xywh, conf) if save_conf else (cls, *xywh)  # label format
                         with open(f'{txt_path}.txt', 'a') as f:
                             f.write(('%g ' * len(line)).rstrip() % line + '\n')
 
+                    #(프로젝트에 사용하는 코드이다.)
                     if save_img or save_crop or view_img:  # Add bbox to image, 변수 save_img가 True 이다.
                         c = int(cls)  # integer class
-                        label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
-                        annotator.box_label(xyxy, label, color=colors(c, True))
+                        label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')  #화면 상의 사각박스에 해당하는 클래스 이름과 정확도를 출력하는 코드임.
+                        annotator.box_label(xyxy, label, color=colors(c, True)) #검출 화면에 바운딩박스를 그림.  plots.py 파일 안의 box_label함수가 있는데 xyxy는 변수 box에 해당하고
+                        #바운딩 박스의 센터좌표를 추출하기 위하여 코드를 추가함.
+                        #test_tmp1 = xyxy[0].item()
+                        #print('test_tmp1 : ', test_tmp1)
+
+                        center_x = (int(xyxy[0].item() + xyxy[2].item()) ) / 2
+                        center_y = (int(xyxy[1].item() + xyxy[3].item()) ) / 2
+
+                        print('center_coordinate : ', '(',center_x,',', center_y,')' )
+                    #(이번 프로젝트에서 필요없는 부분임.)
                     if save_crop:
                         save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
@@ -239,6 +250,7 @@ def run(
 
         # Print time (inference-only)
         LOGGER.info(f"{s}{'' if len(det) else '(no detections), '}{dt[1].dt * 1E3:.1f}ms")
+        time.sleep(0.1)
 
     # Print results
     t = tuple(x.t / seen * 1E3 for x in dt)  # speeds per image
@@ -273,9 +285,9 @@ def parse_opt():
     parser.add_argument('--project', default=ROOT / 'runs/detect', help='save results to project/name')
     parser.add_argument('--name', default='exp', help='save results to project/name')
     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
-    parser.add_argument('--line-thickness', default=3, type=int, help='bounding box thickness (pixels)')
+    parser.add_argument('--line-thickness', default=2, type=int, help='bounding box thickness (pixels)')  #바운딩박스의 선두께를 2로 지정함.
     parser.add_argument('--hide-labels', default=False, action='store_true', help='hide labels')
-    parser.add_argument('--hide-conf', default=False, action='store_true', help='hide confidences')
+    parser.add_argument('--hide-conf', default=True, action='store_true', help='hide confidences')   #정확도(인식률)를 숨김.
     parser.add_argument('--half', action='store_true', help='use FP16 half-precision inference')
     parser.add_argument('--dnn', action='store_true', help='use OpenCV DNN for ONNX inference')
     parser.add_argument('--vid-stride', type=int, default=1, help='video frame-rate stride')
