@@ -103,7 +103,7 @@ def run(
 
     # Load model
     device = select_device(device)  #사용 가능한 GPU가 있으면 GPU를 선택하고, 그렇지 않으면 CPU를 선택합니다.
-    model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data, fp16=half)  # YOLOv5 모델을 로드하고 설정하는 부분
+    model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data, fp16=half)  # YOLOv5 모델을 로드하고 설정하는 부분, DetectMultiBackend은 클래스이며, common.py에 존재함.
     stride, names, pt = model.stride, model.names, model.pt
     imgsz = check_img_size(imgsz, s=stride)  # check image size , 이미지 크기를 검증한다.  #[640, 640] 이 나온다.
 
@@ -135,7 +135,7 @@ def run(
             반환되는 다른 값들은 None이거나 빈 문자열입니다.
     """
 
-    for path, im, im0s, vid_cap, s in dataset:
+    for path, im, im0s, vid_cap, s in dataset:   #변수 dataset이 위의 4개의 변수를 반환함.
 
         with dt[0]:
             im = torch.from_numpy(im).to(model.device)   #이미지 데이터를 나타내는 넘파이 배열(numpy array)입니다. 이 코드는 해당 넘파이 배열을 PyTorch 텐서(Tensor)로 변환하고, 그 텐서를 모델이 사용하는 디바이스(device)로 이동시키는 역할을 합니다.
@@ -157,11 +157,11 @@ def run(
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
         #print("check!")
         # Process predictions
-        for i, det in enumerate(pred):  # per image  (각각의 이미지에 대하여)
+        for i, det in enumerate(pred):  # per image  (각각의 이미지에 대하여), 아이템 i는 소스(웹캠)의 번호를 나타낸다.
             seen += 1
             if webcam:  # batch_size >= 1
                 p, im0, frame = path[i], im0s[i].copy(), dataset.count
-                s += f'{i}: '   #0: 480x640 1 person, 135.5ms 라는 터미널 출력메시지 중에서 0: 에 해당한다.
+                #s += f'{i}: '   #0: 480x640 1 person, 135.5ms 라는 터미널 출력메시지 중에서 0: 에 해당한다.
 
 
             else:
@@ -172,11 +172,11 @@ def run(
 
             txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # im.txt
 
-            s += '%gx%g ' % im.shape[2:]  # print string   #0: 480x640 1 person, 135.5ms 라는 터미널 출력메시지 중에서 480x640 에 해당한다.
+            #s += '%gx%g ' % im.shape[2:]  # print string   #0: 480x640 1 person, 135.5ms 라는 터미널 출력메시지 중에서 480x640 에 해당한다.
 
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             imc = im0.copy() if save_crop else im0  # for save_crop, 변수 imc는 im0와 같다.
-            annotator = Annotator(im0, line_width=line_thickness, example=str(names))
+            annotator = Annotator(im0, line_width=line_thickness, example=str(names))    #바운딩 박스 관련 코드이다.
 
             if len(det):
                 # Rescale boxes from img_size to im0 size
@@ -186,11 +186,11 @@ def run(
                 # Print results
                 for c in det[:, 5].unique():
                     n = (det[:, 5] == c).sum()  # detections per class
-                    s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
+                    #s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
                     #웹캠을 2개 사용할 것이므로 실험을 위해 잠깐 코드를 추가하였다. (참고할 것!)
 
-                    if(n>=2 and names[int(c)] == 'person'):
-                        print("^^")
+                    #if(n>=2 and names[int(c)] == 'person'):
+                    #    print("^^")
                     #print(source)
                     #print(s)
 
@@ -206,16 +206,18 @@ def run(
                     if save_img or save_crop or view_img:  # Add bbox to image, 변수 save_img가 True 이다.
                         c = int(cls)  # integer class
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')  #화면 상의 사각박스에 해당하는 클래스 이름과 정확도를 출력하는 코드임.
-                        annotator.box_label(xyxy, label, color=colors(c, True)) #검출 화면에 바운딩박스를 그림.  plots.py 파일 안의 box_label함수가 있는데 xyxy는 변수 box에 해당하고
+                        annotator.box_label(xyxy, label, color=colors(c, True)) #검출 화면에 바운딩박스를 그림.  plots.py 파일 안의 box_label함수가 있는데 xyxy는 변수 box에 해당함.
                         #바운딩 박스의 센터좌표를 추출하기 위하여 코드를 추가함.
                         #test_tmp1 = xyxy[0].item()
                         #print('test_tmp1 : ', test_tmp1)
 
                         center_x = (int(xyxy[0].item() + xyxy[2].item()) ) / 2
                         center_y = (int(xyxy[1].item() + xyxy[3].item()) ) / 2
+                        msg = '{} : {}, {}'.format(i, center_x, center_y)
 
-                        print('center_coordinate : ', '(',center_x,',', center_y,')' )
-                    #(이번 프로젝트에서 필요없는 부분임.)
+                        print(msg)
+
+                    #(이번 프로젝트에서 필요없는 부분임.)#############################################
                     if save_crop:
                         save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
@@ -228,7 +230,7 @@ def run(
                     cv2.resizeWindow(str(p), im0.shape[1], im0.shape[0])
                 cv2.imshow(str(p), im0)
                 cv2.waitKey(1)  # 1 millisecond
-
+########################################################################################################################
             # Save results (image with detections), 변수 save_img가 Ture이다.
             if save_img:
                 if dataset.mode == 'image':
@@ -247,12 +249,12 @@ def run(
                         save_path = str(Path(save_path).with_suffix('.mp4'))  # force *.mp4 suffix on results videos
                         vid_writer[i] = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
                     vid_writer[i].write(im0)
-
+##########################################################################################################################
         # Print time (inference-only)
-        LOGGER.info(f"{s}{'' if len(det) else '(no detections), '}{dt[1].dt * 1E3:.1f}ms")
-        time.sleep(0.1)
+        #LOGGER.info(f"{s}{'' if len(det) else '(no detections), '}{dt[1].dt * 1E3:.1f}ms")   #터미널에 출력되는 문장을 의미한다.
+        #time.sleep(0.1)   #너무 빨라서 시간지연함.
 
-    # Print results
+    # Print results   #이번 프로젝트에서는 사용안함.
     t = tuple(x.t / seen * 1E3 for x in dt)  # speeds per image
     LOGGER.info(f'Speed: %.1fms pre-process, %.1fms inference, %.1fms NMS per image at shape {(1, 3, *imgsz)}' % t)
     if save_txt or save_img:
@@ -267,7 +269,7 @@ def parse_opt():
     parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'yolov5s.pt', help='model path or triton URL')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob/screen/0(webcam)')
     parser.add_argument('--data', type=str, default=ROOT / 'data/coco128.yaml', help='(optional) dataset.yaml path')
-    parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
+    parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')  #작은 크기의 입력 이미지는 모델을 빠르게 실행하지만 세부 정보를 놓칠 수 있습니다. 큰 크기의 입력 이미지는 세부 정보를 보다 정확하게 감지할 수 있지만 실행 시간이 증가할 수 있습니다.
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.45, help='NMS IoU threshold')
     parser.add_argument('--max-det', type=int, default=1000, help='maximum detections per image')
