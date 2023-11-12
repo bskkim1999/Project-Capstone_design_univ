@@ -29,6 +29,7 @@ Usage - formats:
 """
 import time   #새롭게 추가한 라이브러리
 import math   #새롭게 추가한 라이브러리
+import cv2    #새롭게 추가한 라이브러리
 import argparse
 import os
 import platform
@@ -213,12 +214,29 @@ def run(
                         #test_tmp1 = xyxy[0].item()
                         #print('test_tmp1 : ', test_tmp1)
 
+                        #바운딩 박스의 중심좌표(센터좌표)이다.
                         center_x = (int(xyxy[0].item() + xyxy[2].item()) ) / 2
                         center_y = (int(xyxy[1].item() + xyxy[3].item()) ) / 2
+                        center_coordinate = (int(center_x), int(center_y))
+                        center_coordinate_on_screen = (int(center_x) + 10, int(center_y))   #원 옆에 (x, y)를 표시하기 위해서 추가함.
 
+                        #실수를 문자열로 변환함.
+                        center_x_string = str(center_x)
+                        center_y_string = str(center_y)
+                        center_coordinate_string = '(' + center_x_string +',' + center_y_string + ')'
+
+                        #좌표 출력(터미널)
                         #msg = '{} : {}, {}'.format(i, center_x, center_y)
-
                         #print(msg)
+
+                        # 바운딩 박스의 중심에 원을 표시함.
+                        red = (0, 0, 255)
+                        cv2.circle(im0, center_coordinate, 5, red, cv2.FILLED)
+
+                        #바운딩 박스의 원 옆에 좌표데이터를 표시함.
+                        white = (255,255,255)
+                        cv2.putText(im0, center_coordinate_string , center_coordinate_on_screen, cv2.FONT_HERSHEY_PLAIN, 2, white, thickness=2, lineType=cv2.LINE_AA)
+
 
                         #물체의 깊이를 알기 위하여 추가한 코드이다.
                         cam_distance = 21.0
