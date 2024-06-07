@@ -20,7 +20,8 @@ int main(void) {
 double convert_pixel_to_cm(double cm_, double pixel_, double object_pixel) {
     /* depth에 따라서 cm당 픽셀크기가 달라지므로 고려해주어야 한다.
     //우선, 실험적으로 depth를 하나 정하여 Wpx를 구한다. 그런 다음,
-    //Wpx를 cm로 변환한다.
+    //Wpx를 cm로 변환한다. pixel_은 프로그램으로 알 수 있지만 cm_은 직접 실측하여 구해야 함.
+    즉, depth 하나 당 cm_와 pixel_이 정해진다.
     w : Wpx = 1cm : x(px)
     x(px) = Wpx / w      */
 
