@@ -30,7 +30,7 @@
 //40                    302
 //41                    304
 //42                    306
-
+//etc                   etc
 
 
 
@@ -76,6 +76,10 @@ int usage()
 	printf("%s", Log::Usage());
 
 	return 0;
+}
+
+double convert_cm_to_meter(double cm_){
+	return cm_ / 100;
 }
 
 double convert_pixel_to_meter(double cm_, double pixel_, double object_pixel){
@@ -440,40 +444,35 @@ int main( int argc, char** argv )
 		double cam_width = 1280.0;  //width is 1280 pixels.
 		double object_y_average;
 		double cam_height_average_pixel;
-		
 
-		//cam_1 and cam_2
+		//width variable.
+		double beta_1;
+		double O1;
+		double beta_2;
+		double O2;
+		double cam_mid_location = cam_distance / 2.0;
+
+		//cam_1 and cam_2. angle1, angle2, angle3 are radian.
 		angle1 = (cam_width - cam_1_x_center) * (webcam_dFov / cam_width) + (PI - webcam_dFov) / 2;
 		angle2 = cam_2_x_center * (webcam_dFov / cam_width) + (PI - webcam_dFov) / 2;
 		angle3 = PI - angle1 - angle2;
 
 		if (cam_1_object_detected == true && cam_2_object_detected == true  ) {
 			//calculate depth.
-			object_depth = (cam_distance * sin(angle1) * sin(angle2)) / sin(angle3) / 100;
-			
-			/////////////////////////
+			object_depth = (cam_distance * sin(angle1) * sin(angle2)) / sin(angle3) ;
+
 			//calculate width.
 			//if object is on left side.
-			if( cam_2_x_center < (cam_width - cam_1_x_center) ){
-				object_width = ((cam_2_x_center + (cam_width - cam_1_x_center)) / 2 - cam_2_x_center) / 37.795276;   //1cm -> 37.795276 pixel
-				
-			}
-			
-			/////////////////////////////////////////////////////////////////////////////////////////////////
-
-			//algorithm splits according to depth.
-			if(object_depth >=35 && object_depth < 36){
-				//calculate width./////////////
-				double tmp = return_pixel__depth_is_35cm_to_36cm(object_depth);
-				//if object is on left side.
 				if( cam_2_x_center < (cam_width - cam_1_x_center) ){
-					object_width = convert_pixel_to_meter( 5.0, tmp, ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - cam_2_x_center));
+					//object_width = convert_pixel_to_meter( 5.0, tmp, ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - cam_2_x_center));
+					object_width = (object_depth - (cam_mid_location * tan(angle2)) ) / tan(angle2);
 				}
 
 				//if object is on right side.
 				else{
 					if(cam_2_x_center > (cam_width - cam_1_x_center)){
-						object_width = convert_pixel_to_meter(5.0, tmp, (-1) * ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - (cam_width - cam_1_x_center)));  
+						//object_width = convert_pixel_to_meter(5.0, tmp, (-1) * ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - (cam_width - cam_1_x_center)));  
+						object_width = (object_depth - (cam_mid_location * tan(angle1)) ) / tan(angle1);
 					}
 				//object is in the middle.
 					else{
@@ -481,32 +480,20 @@ int main( int argc, char** argv )
 					}
 
 				}
+			
+			/////////////////////////////////////////////////////////////////////////////////////////////////
 
+			//calculate height : algorithm splits according to depth.
+			if(object_depth >=35 && object_depth < 36){
+				double tmp = return_pixel__depth_is_35cm_to_36cm(object_depth);
 				//calculate height.////////////
 				object_y_average = (cam_1_y_center + cam_2_y_center) / 2;
 				object_height = convert_pixel_to_meter( 5.0, tmp, 720-object_y_average - 293 );
 			}
 
 			else if(object_depth >= 36 && object_depth < 37){
-				//calculate width./////////////
+				
 				double tmp = return_pixel__depth_is_36cm_to_37cm(object_depth);
-				//if object is on left side.
-				if( cam_2_x_center < (cam_width - cam_1_x_center) ){
-					object_width = convert_pixel_to_meter( 5.0, tmp, ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - cam_2_x_center));
-				}
-
-				//if object is on right side.
-				else{
-					if(cam_2_x_center > (cam_width - cam_1_x_center)){
-						object_width = convert_pixel_to_meter(5.0, tmp, (-1) * ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - (cam_width - cam_1_x_center)));  
-					}
-				//object is in the middle.
-					else{
-						object_width = 0;
-					}
-
-				}
-
 				//calculate height.////////////
 				object_y_average = (cam_1_y_center + cam_2_y_center) / 2;
 				object_height = convert_pixel_to_meter( 5.0, tmp, 720-object_y_average - 295 );
@@ -515,24 +502,9 @@ int main( int argc, char** argv )
 			}
 			
 			else if(object_depth >= 37 && object_depth < 38){
-				//calculate width./////////////
+				
 				double tmp = return_pixel__depth_is_37cm_to_38cm(object_depth);
-				//if object is on left side.
-				if( cam_2_x_center < (cam_width - cam_1_x_center) ){
-					object_width = convert_pixel_to_meter( 5.0, tmp, ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - cam_2_x_center));
-				}
-
-				//if object is on right side.
-				else{
-					if(cam_2_x_center > (cam_width - cam_1_x_center)){
-						object_width = convert_pixel_to_meter(5.0, tmp, (-1) * ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - (cam_width - cam_1_x_center)));  
-					}
-				//object is in the middle.
-					else{
-						object_width = 0;
-					}
-
-				}
+				
 
 				//calculate height.////////////
 				object_y_average = (cam_1_y_center + cam_2_y_center) / 2;
@@ -540,49 +512,17 @@ int main( int argc, char** argv )
 			}
 
 			else if(object_depth >= 38 && object_depth < 39){
-				//calculate width./////////////
+				
 				double tmp = return_pixel__depth_is_38cm_to_39cm(object_depth);
-				//if object is on left side.
-				if( cam_2_x_center < (cam_width - cam_1_x_center) ){
-					object_width = convert_pixel_to_meter( 5.0, tmp, ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - cam_2_x_center));
-				}
-
-				//if object is on right side.
-				else{
-					if(cam_2_x_center > (cam_width - cam_1_x_center)){
-						object_width = convert_pixel_to_meter(5.0, tmp, (-1) * ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - (cam_width - cam_1_x_center)));  
-					}
-				//object is in the middle.
-					else{
-						object_width = 0;
-					}
-
-				}
-
+				
 				//calculate height.////////////
 				object_y_average = (cam_1_y_center + cam_2_y_center) / 2;
 				object_height = convert_pixel_to_meter( 5.0, tmp, 720-object_y_average - 299 );
 			}
 
 			else if(object_depth >= 39 && object_depth < 40){
-				//calculate width./////////////
 				double tmp = return_pixel__depth_is_39cm_to_40cm(object_depth);
-				//if object is on left side.
-				if( cam_2_x_center < (cam_width - cam_1_x_center) ){
-					object_width = convert_pixel_to_meter( 5.0, tmp, ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - cam_2_x_center));
-				}
-
-				//if object is on right side.
-				else{
-					if(cam_2_x_center > (cam_width - cam_1_x_center)){
-						object_width = convert_pixel_to_meter(5.0, tmp, (-1) * ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - (cam_width - cam_1_x_center)));  
-					}
-				//object is in the middle.
-					else{
-						object_width = 0;
-					}
-
-				}
+				
 
 				//calculate height.////////////
 				object_y_average = (cam_1_y_center + cam_2_y_center) / 2;
@@ -591,74 +531,27 @@ int main( int argc, char** argv )
 
 
 			else if(object_depth >= 40 && object_depth < 41){
-				//calculate width./////////////
+				
 				double tmp = return_pixel__depth_is_40cm_to_41cm(object_depth);
-				//if object is on left side.
-				if( cam_2_x_center < (cam_width - cam_1_x_center) ){
-					object_width = convert_pixel_to_meter( 5.0, tmp, ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - cam_2_x_center));
-				}
-
-				//if object is on right side.
-				else{
-					if(cam_2_x_center > (cam_width - cam_1_x_center)){
-						object_width = convert_pixel_to_meter(5.0, tmp, (-1) * ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - (cam_width - cam_1_x_center)));  
-					}
-				//object is in the middle.
-					else{
-						object_width = 0;
-					}
-
-				}
-
+				
 				//calculate height.////////////
 				object_y_average = (cam_1_y_center + cam_2_y_center) / 2;
 				object_height = convert_pixel_to_meter( 5.0, tmp, 720-object_y_average - 303 );
 			}
 
 			else if(object_depth >= 41 && object_depth < 42){
-				//calculate width./////////////
+				
 				double tmp = return_pixel__depth_is_41cm_to_42cm(object_depth);
-				//if object is on left side.
-				if( cam_2_x_center < (cam_width - cam_1_x_center) ){
-					object_width = convert_pixel_to_meter( 5.0, tmp, ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - cam_2_x_center));
-				}
-
-				//if object is on right side.
-				else{
-					if(cam_2_x_center > (cam_width - cam_1_x_center)){
-						object_width = convert_pixel_to_meter(5.0, tmp, (-1) * ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - (cam_width - cam_1_x_center)));  
-					}
-				//object is in the middle.
-					else{
-						object_width = 0;
-					}
-
-				}
-
+				
 				//calculate height.////////////
 				object_y_average = (cam_1_y_center + cam_2_y_center) / 2;
 				object_height = convert_pixel_to_meter( 5.0, tmp, 720-object_y_average - 305 );
 			}
 
 			else if(object_depth >= 42 && object_depth < 46){
-				//calculate width./////////////
+				
 				double tmp = return_pixel__depth_is_42cm_to_46cm(object_depth);
-				//if object is on left side.
-				if( cam_2_x_center < (cam_width - cam_1_x_center) ){
-					object_width = convert_pixel_to_meter( 5.0, tmp, ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - cam_2_x_center));
-				}
-
-				//if object is on right side.
-				else{
-					if(cam_2_x_center > (cam_width - cam_1_x_center)){
-						object_width = convert_pixel_to_meter(5.0, tmp, (-1) * ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - (cam_width - cam_1_x_center)));  
-					}
-				//object is in the middle.
-					else{
-						object_width = 0;
-					}
-
-				}
+				
 
 				//calculate height.////////////
 				object_y_average = (cam_1_y_center + cam_2_y_center) / 2;
@@ -666,24 +559,9 @@ int main( int argc, char** argv )
 			}
 
 			else if(object_depth >= 46 && object_depth < 50){
-				//calculate width./////////////
+				
 				double tmp = return_pixel__depth_is_46cm_to_50cm(object_depth);
-				//if object is on left side.
-				if( cam_2_x_center < (cam_width - cam_1_x_center) ){
-					object_width = convert_pixel_to_meter( 5.0, tmp, ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - cam_2_x_center));
-				}
-
-				//if object is on right side.
-				else{
-					if(cam_2_x_center > (cam_width - cam_1_x_center)){
-						object_width = convert_pixel_to_meter(5.0, tmp, (-1) * ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - (cam_width - cam_1_x_center)));  
-					}
-				//object is in the middle.
-					else{
-						object_width = 0;
-					}
-
-				}
+				
 
 				//calculate height.////////////
 				object_y_average = (cam_1_y_center + cam_2_y_center) / 2;
@@ -691,74 +569,27 @@ int main( int argc, char** argv )
 			}
 
 			else if(object_depth >= 50 && object_depth < 54){
-				//calculate width./////////////
+				
 				double tmp = return_pixel__depth_is_50cm_to_54cm(object_depth);
-				//if object is on left side.
-				if( cam_2_x_center < (cam_width - cam_1_x_center) ){
-					object_width = convert_pixel_to_meter( 5.0, tmp, ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - cam_2_x_center));
-				}
-
-				//if object is on right side.
-				else{
-					if(cam_2_x_center > (cam_width - cam_1_x_center)){
-						object_width = convert_pixel_to_meter(5.0, tmp, (-1) * ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - (cam_width - cam_1_x_center)));  
-					}
-				//object is in the middle.
-					else{
-						object_width = 0;
-					}
-
-				}
-
+				
 				//calculate height.////////////
 				object_y_average = (cam_1_y_center + cam_2_y_center) / 2;
 				object_height = convert_pixel_to_meter( 5.0, tmp, 720-object_y_average - 326 );
 			}
 			
 			else if(object_depth >= 54 && object_depth < 58){
-				//calculate width./////////////
+				
 				double tmp = return_pixel__depth_is_54cm_to_58cm(object_depth);
-				//if object is on left side.
-				if( cam_2_x_center < (cam_width - cam_1_x_center) ){
-					object_width = convert_pixel_to_meter( 5.0, tmp, ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - cam_2_x_center));
-				}
-
-				//if object is on right side.
-				else{
-					if(cam_2_x_center > (cam_width - cam_1_x_center)){
-						object_width = convert_pixel_to_meter(5.0, tmp, (-1) * ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - (cam_width - cam_1_x_center)));  
-					}
-				//object is in the middle.
-					else{
-						object_width = 0;
-					}
-
-				}
-
+				
 				//calculate height.////////////
-				//object_y_average = (cam_1_y_center + cam_2_y_center) / 2;
-				//object_height = convert_pixel_to_meter( 5.0, tmp, 720-object_y_average - 310.25 );
+				object_y_average = (cam_1_y_center + cam_2_y_center) / 2;
+				object_height = convert_pixel_to_meter( 5.0, tmp, 720-object_y_average - 334 );
 			}
 
 			else if(object_depth >= 58 && object_depth < 62){
-				//calculate width./////////////
+				
 				double tmp = return_pixel__depth_is_58cm_to_62cm(object_depth);
-				//if object is on left side.
-				if( cam_2_x_center < (cam_width - cam_1_x_center) ){
-					object_width = convert_pixel_to_meter( 5.0, tmp, ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - cam_2_x_center));
-				}
-
-				//if object is on right side.
-				else{
-					if(cam_2_x_center > (cam_width - cam_1_x_center)){
-						object_width = convert_pixel_to_meter(5.0, tmp, (-1) * ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - (cam_width - cam_1_x_center)));  
-					}
-				//object is in the middle.
-					else{
-						object_width = 0;
-					}
-
-				}
+				
 
 				//calculate height.////////////
 				object_y_average = (cam_1_y_center + cam_2_y_center) / 2;
@@ -766,49 +597,17 @@ int main( int argc, char** argv )
 			}
 
 			else if(object_depth >= 62 && object_depth < 66){
-				//calculate width./////////////
+				
 				double tmp = return_pixel__depth_is_62cm_to_66cm(object_depth);
-				//if object is on left side.
-				if( cam_2_x_center < (cam_width - cam_1_x_center) ){
-					object_width = convert_pixel_to_meter( 5.0, tmp, ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - cam_2_x_center));
-				}
-
-				//if object is on right side.
-				else{
-					if(cam_2_x_center > (cam_width - cam_1_x_center)){
-						object_width = convert_pixel_to_meter(5.0, tmp, (-1) * ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - (cam_width - cam_1_x_center)));  
-					}
-				//object is in the middle.
-					else{
-						object_width = 0;
-					}
-
-				}
-
+				
 				//calculate height.////////////
 				object_y_average = (cam_1_y_center + cam_2_y_center) / 2;
 				object_height = convert_pixel_to_meter( 5.0, tmp, 720-object_y_average - 350 );
 			}
 
 			else if(object_depth >= 66 && object_depth < 70){
-				//calculate width./////////////
+				
 				double tmp = return_pixel__depth_is_66cm_to_70cm(object_depth);
-				//if object is on left side.
-				if( cam_2_x_center < (cam_width - cam_1_x_center) ){
-					object_width = convert_pixel_to_meter( 5.0, tmp, ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - cam_2_x_center));
-				}
-
-				//if object is on right side.
-				else{
-					if(cam_2_x_center > (cam_width - cam_1_x_center)){
-						object_width = convert_pixel_to_meter(5.0, tmp, (-1) * ((cam_2_x_center + (cam_width - cam_1_x_center))/2 - (cam_width - cam_1_x_center)));  
-					}
-				//object is in the middle.
-					else{
-						object_width = 0;
-					}
-
-				}
 
 				//calculate height.////////////
 				object_y_average = (cam_1_y_center + cam_2_y_center) / 2;
@@ -835,9 +634,9 @@ int main( int argc, char** argv )
 				count_object = 10;   //to fix count_object.
 				printf("hello \n");
 				//calculate median.
-				median_object_depth = median_func(array_object_depth, 10);
-				median_object_width = median_func(array_object_width, 10);
-				median_object_height = median_func(array_object_height, 10);
+				median_object_depth = convert_cm_to_meter( median_func(array_object_depth, 10) );    //cm -> meter
+				median_object_width = convert_cm_to_meter( median_func(array_object_width, 10) );    //cm -> meter
+				median_object_height = median_func(array_object_height, 10);  //meter
 				
 				
 				printf("median_object_depth : %.6f \n", median_object_depth); 
